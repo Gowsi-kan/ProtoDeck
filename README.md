@@ -1,63 +1,53 @@
-# ProtoDeck
+<p align="center">
+  <img src="Assets/readme-icon.svg" alt="ProtoDeck app icon" width="112" />
+</p>
 
-![ProtoDeck logo](Assets/readme-icon.svg)
+<h1 align="center">ProtoDeck</h1>
 
-**A desktop workbench for exploring and invoking gRPC services.**
+<p align="center">
+  Explore and test gRPC services from a cross-platform desktop app.
+</p>
 
-Load a `.proto` file or connect through server reflection, edit JSON requests, and test every gRPC call pattern from one cross-platform app.
+<p align="center">
+  <img src="https://img.shields.io/badge/.NET-10-512BD4?style=for-the-badge&logo=dotnet&logoColor=white" alt=".NET 10" />
+  <img src="https://img.shields.io/badge/C%23-Programming%20Language-512BD4?style=for-the-badge&logo=csharp&logoColor=white" alt="C sharp" />
+  <img src="https://img.shields.io/badge/Avalonia-UI%20Framework-8B5CF6?style=for-the-badge" alt="Avalonia UI" />
+  <img src="https://img.shields.io/badge/gRPC-API%20Protocol-244C5A?style=for-the-badge" alt="gRPC" />
+</p>
 
-[![.NET 10](https://img.shields.io/badge/.NET-10.0-512BD4?logo=dotnet&logoColor=white)](https://dotnet.microsoft.com/)
-[![Avalonia UI](https://img.shields.io/badge/UI-Avalonia-8B5CF6)](https://avaloniaui.net/)
-[![gRPC](https://img.shields.io/badge/Protocol-gRPC-244C5A)](https://grpc.io/)
-[![MIT License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-![Platforms](https://img.shields.io/badge/Platform-Windows%20%7C%20Linux%20%7C%20macOS-blue)
-
----
-
-## Contents
-
-- [Features](#features)
-- [Tech stack](#tech-stack)
-- [Requirements](#requirements)
-- [Getting started](#getting-started)
-- [Using the app](#using-the-app)
-- [JSON conventions](#json-conventions)
-- [Saved collections](#saved-collections)
-- [Publishing](#publishing)
-- [Limitations](#limitations)
-- [License](#license)
+ProtoDeck is a .NET 10 desktop app built with Avalonia for exploring and
+invoking gRPC services. Load local `.proto` files, or connect to a server
+that supports reflection to discover its services and methods directly.
+Edit JSON requests, inspect responses, and save reusable calls in collections.
 
 ## Features
 
 - Load `.proto` files and resolve imports from additional directories.
-- Discover services through gRPC server reflection (v1, with v1alpha fallback).
-- Invoke unary, server-streaming, client-streaming, and bidirectional-streaming methods.
-- Edit JSON request bodies pre-filled with default values and inspect response shapes.
-- Configure metadata, deadlines, cancellation, and view response headers and trailers.
-- Save reusable requests to local collections.
-- Connect over plaintext HTTP/2 or TLS.
-
-## Tech stack
-
-| Area | Technology |
-| --- | --- |
-| Language and runtime | C# / .NET 10 |
-| Desktop UI | Avalonia UI 11 |
-| gRPC transport | `Grpc.Net.Client` |
-| Protocol definitions and messages | Protocol Buffers / `Google.Protobuf` |
-| `.proto` parsing | `protobuf-net.Reflection` |
-| UI architecture | MVVM with CommunityToolkit.Mvvm |
+- Discover services and methods through server reflection (v1, with v1alpha
+  fallback) when reflection is enabled on the server.
+- Invoke unary, server-streaming, client-streaming, and bidirectional-streaming
+  methods.
+- Edit JSON requests using templates generated from method input messages.
+- Configure metadata and deadlines, cancel calls, and inspect response headers
+  and trailers.
+- Save requests to local collections for reuse.
+- Connect over plaintext HTTP/2 or TLS, and switch between light and dark themes.
 
 ## Requirements
 
 - [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)
-- A gRPC service, or local `.proto` files to load
+- Windows, Linux, or macOS
+- Local `.proto` files or a gRPC server with reflection enabled for service
+  discovery
+- A reachable gRPC server to invoke methods
 
-## Getting started
+## Get started
 
-From the project directory:
+Clone the repository and launch the app:
 
 ```sh
+git clone https://github.com/Gowsi-kan/ProtoDeck.git
+cd ProtoDeck
 dotnet run -c Release
 ```
 
@@ -69,19 +59,37 @@ dotnet build ProtoDeck.csproj -c Release
 
 ## Using the app
 
-1. Select **Load .proto files…** to load one or more files. Add import directories if your proto files import definitions from elsewhere.
-2. Or enter a server address and select **Connect (reflection)**. Reflection must be enabled by the server.
-3. Choose a service and method. The request editor is populated with a template based on the method's input message.
-4. For unary and server-streaming methods, select **Send**. Select **Cancel** to stop an in-progress call.
-5. For client-streaming and bidirectional methods, select **Open stream**, then edit and **Send message** as needed. Select **End stream** to finish sending or **Abort** to cancel.
-6. Add metadata as `key: value`, one entry per line. Use base64 values for `-bin` metadata keys; lines beginning with `#` are comments.
-7. Select **Save to collection** to save the address, method, request body, metadata, and deadline.
+1. Select **Load .proto files...** to load local definitions. Add import paths
+   separated by semicolons when needed.
+2. Alternatively, enter a server address and select **Connect** to discover
+   services using server reflection. The server must have reflection enabled.
+3. Select a service and method. The request editor is populated with a
+   template based on the method's input message.
+4. For unary and server-streaming methods, select **Send**. Select **Cancel**
+   to stop an in-progress call.
+5. For client-streaming and bidirectional methods, select **Open stream**, then
+   edit and **Send message** as needed. Select **End stream** to finish
+   sending or **Abort** to cancel.
+6. Add metadata as `key: value`, one entry per line. Use base64 values for
+   `-bin` metadata keys; lines beginning with `#` are comments.
+7. Use **Save** to store the address, method, request body, metadata, and
+   deadline in a collection.
 
-The app supports plaintext HTTP/2 (`http://`) and TLS (`https://`). A certificate-check bypass is available for development use; avoid it for production connections.
+## Connections and saved collections
+
+ProtoDeck supports plaintext HTTP/2 (`http://`) and TLS (`https://`). **Skip TLS
+verification** accepts untrusted certificates and is intended for development
+only; leave it disabled for production connections.
+
+Collections are stored locally as JSON in the original app directory to
+preserve existing saved requests:
+
+- **Linux:** `~/.config/GrpcWorkbench/collections.json`
+- **Windows:** `%APPDATA%\GrpcWorkbench\collections.json`
 
 ## JSON conventions
 
-The request and response editors use protobuf JSON conventions:
+Request and response editors use protobuf JSON conventions:
 
 | Protobuf type | JSON representation |
 | --- | --- |
@@ -94,14 +102,8 @@ The request and response editors use protobuf JSON conventions:
 | `map` | JSON object |
 | `NaN`, positive/negative infinity | `"NaN"`, `"Infinity"`, `"-Infinity"` |
 
-`Struct`, `Value`, `Any`, and `FieldMask` are currently handled as regular messages using their raw field layout.
-
-## Saved collections
-
-Collections are stored locally as JSON in the original directory to preserve existing saved requests:
-
-- **Linux:** `~/.config/GrpcWorkbench/collections.json`
-- **Windows:** `%APPDATA%\GrpcWorkbench\collections.json`
+`Struct`, `Value`, `Any`, and `FieldMask` are currently handled as regular
+messages using their raw field layout.
 
 ## Publishing
 
@@ -112,17 +114,21 @@ dotnet publish -c Release -r win-x64 --self-contained -p:PublishSingleFile=true
 dotnet publish -c Release -r linux-x64 --self-contained -p:PublishSingleFile=true
 ```
 
-For macOS, create an app bundle. Use `osx-arm64` for Apple silicon or `osx-x64` for Intel:
+For macOS, create an app bundle. Use `osx-arm64` for Apple silicon or `osx-x64`
+for Intel:
 
 ```sh
 sh Packaging/macos/build-app.sh osx-arm64
 ```
 
-The bundle is written under `bin/publish/<runtime>/ProtoDeck.app`. Signing and notarization are not included. The commands above target x64 Windows/Linux; change the runtime identifier (`-r`) to publish for another supported architecture.
+The bundle is written under `bin/publish/<runtime>/ProtoDeck.app`. Signing and
+notarization are not included. The Windows and Linux commands above target
+x64; change the runtime identifier (`-r`) for another supported architecture.
 
 ### Linux desktop integration
 
-Make the published executable available as `ProtoDeck` on your desktop session's `PATH`. Then install the desktop entry and icon for your user:
+Make the published executable available as `ProtoDeck` on your desktop
+session's `PATH`. Then install the desktop entry and icon for your user:
 
 ```sh
 mkdir -p ~/.local/share/applications ~/.local/share/icons/hicolor/scalable/apps
@@ -130,10 +136,26 @@ cp Packaging/linux/protodeck.desktop ~/.local/share/applications/
 cp Assets/icon.svg ~/.local/share/icons/hicolor/scalable/apps/protodeck.svg
 ```
 
-The desktop entry runs `ProtoDeck` by name. If the executable is not on the desktop session's `PATH`, edit `Exec` in the installed desktop entry to use the executable's absolute path.
+The desktop entry runs `ProtoDeck` by name. If the executable is not on the
+desktop session's `PATH`, edit `Exec` in the installed desktop entry to use the
+executable's absolute path.
 
-## Limitations
+## Project structure
 
+| Path | Description |
+| --- | --- |
+| [`Views/`](Views/) | Avalonia desktop window and UI |
+| [`ViewModels/`](ViewModels/) | UI state and commands |
+| [`Services/`](Services/) | Schema loading, reflection, invocation, JSON conversion, and collection storage |
+| [`Models/`](Models/) | Application data models |
+| [`Protos/`](Protos/) | gRPC reflection protocol definitions |
+| [`Packaging/`](Packaging/) | Linux desktop integration and macOS app bundling |
+| [`Assets/`](Assets/) and [`Styles/`](Styles/) | App icons and UI styling |
+
+## Current limitations
+
+- Server reflection must be enabled to discover services without local
+  `.proto` files.
 - Client certificates for mTLS are not supported yet.
 - Environments and variables are not supported yet.
 - Requests are edited as JSON; there is no per-field form editor.
