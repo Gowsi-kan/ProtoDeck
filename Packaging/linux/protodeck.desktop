@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=ProtoDeck
+Comment=Explore and invoke gRPC services
+Exec=ProtoDeck
+Icon=protodeck
+Terminal=false
+Categories=Development;Network;

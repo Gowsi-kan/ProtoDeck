@@ -1,0 +1,400 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="ProtoDeck.Views.MainWindow"
+        Title="ProtoDeck"
+        Width="1360" Height="860" MinWidth="1000" MinHeight="620"
+        SystemDecorations="None"
+        Icon="avares://ProtoDeck/Assets/icon.png"
+        Background="{DynamicResource Bg}"
+        Foreground="{DynamicResource Text}"
+        FontFamily="Inter,Segoe UI,sans-serif"
+        FontSize="13">
+
+  <Window.KeyBindings>
+    <KeyBinding Gesture="F5" Command="{Binding ConnectCommand}" />
+    <KeyBinding Gesture="Ctrl+Enter" Command="{Binding SendCommand}" />
+    <KeyBinding Gesture="Ctrl+Shift+Enter" Command="{Binding SendMessageCommand}" />
+  </Window.KeyBindings>
+
+  <Grid>
+    <Grid RowDefinitions="Auto,*">
+      <Border Grid.Row="0" Classes="rule" Background="{DynamicResource SurfaceRaised}"
+              BorderThickness="0,0,0,1">
+        <Grid ColumnDefinitions="*,Auto">
+          <Border Background="Transparent" PointerPressed="OnTitleBarPointerPressed">
+            <StackPanel Orientation="Horizontal" Spacing="8" Margin="14,0" VerticalAlignment="Center"
+                        IsHitTestVisible="False">
+              <Image Source="avares://ProtoDeck/Assets/icon.png" Width="22" Height="22" />
+              <TextBlock Text="ProtoDeck" FontWeight="SemiBold" VerticalAlignment="Center" />
+            </StackPanel>
+          </Border>
+          <StackPanel Grid.Column="1" Orientation="Horizontal">
+            <Button Classes="window-control" Click="OnMinimize" AutomationProperties.Name="Minimize"
+                    ToolTip.Tip="Minimize">
+              <PathIcon Data="M4,12 H20 V13 H4 Z" />
+            </Button>
+            <Button Classes="window-control" Click="OnMaximizeRestore"
+                    AutomationProperties.Name="Maximize or restore" ToolTip.Tip="Maximize or restore">
+              <PathIcon x:Name="MaximizeIcon" Data="M5,5 H19 V19 H5 Z M6,6 V18 H18 V6 Z" />
+            </Button>
+            <Button Classes="window-control close" Click="OnClose" AutomationProperties.Name="Close"
+                    ToolTip.Tip="Close">
+              <PathIcon Data="M5,4 L12,11 L19,4 L20,5 L13,12 L20,19 L19,20 L12,13 L5,20 L4,19 L11,12 L4,5 Z" />
+            </Button>
+          </StackPanel>
+        </Grid>
+      </Border>
+
+  <Grid Grid.Row="1" RowDefinitions="Auto,*,Auto">
+
+    <!-- ═════════════ Header: brand, endpoint, connection ═════════════ -->
+    <Border Grid.Row="0" Classes="rule" Background="{DynamicResource SurfaceRaised}"
+            BorderThickness="0,0,0,1" Padding="14,10">
+      <Grid ColumnDefinitions="Auto,*,Auto,Auto,Auto,Auto">
+
+        <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center" Margin="0,0,16,0">
+          <Border Width="28" Height="28" CornerRadius="7" Background="{DynamicResource Brand}">
+            <PathIcon Data="M13,2 L4,14 H11 L10,22 L20,9 H13 Z" Foreground="{DynamicResource BrandFg}" />
+          </Border>
+          <StackPanel VerticalAlignment="Center" Spacing="-1">
+            <TextBlock Text="ProtoDeck" FontSize="14" FontWeight="SemiBold" />
+            <TextBlock Classes="subtle" Text="API console" FontSize="10" />
+          </StackPanel>
+        </StackPanel>
+
+        <TextBox Grid.Column="1" Classes="mono" Text="{Binding Address}"
+                 Watermark="http://localhost:5000" AutomationProperties.Name="Server address">
+          <TextBox.KeyBindings>
+            <KeyBinding Gesture="Enter" Command="{Binding ConnectCommand}" />
+          </TextBox.KeyBindings>
+        </TextBox>
+
+        <CheckBox Grid.Column="2" Margin="14,0,0,0" Content="Skip TLS verification"
+                  IsChecked="{Binding Insecure}"
+                  ToolTip.Tip="Accept self-signed certificates. Development only." />
+
+        <StackPanel Grid.Column="3" Margin="14,0,0,0" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+          <TextBlock Classes="muted" Text="Deadline (s)" VerticalAlignment="Center" />
+          <NumericUpDown Value="{Binding TimeoutSeconds}" Minimum="0" Maximum="3600" Increment="5"
+                         FormatString="0" Width="120" MinHeight="30"
+                         ToolTip.Tip="0 = no deadline" />
+        </StackPanel>
+
+        <Button Grid.Column="4" Classes="success" Margin="14,0,0,0" Command="{Binding ConnectCommand}"
+                IsEnabled="{Binding !IsBusy}" IsVisible="{Binding !IsConnected}"
+                ToolTip.Tip="Discover services through server reflection (F5 or Enter)">
+          <StackPanel Orientation="Horizontal" Spacing="8">
+            <PathIcon Data="M13,2 L4,14 H11 L10,22 L20,9 H13 Z" />
+            <TextBlock Text="Connect" />
+          </StackPanel>
+        </Button>
+
+        <Button Grid.Column="4" Classes="danger" Margin="14,0,0,0" Command="{Binding DisconnectCommand}"
+                IsVisible="{Binding IsConnected}" ToolTip.Tip="Disconnect from the server">
+          <StackPanel Orientation="Horizontal" Spacing="8">
+            <PathIcon Data="M7,6 H17 V18 H7 Z M4,3 H20 V21 H4 Z M7,9 H4" />
+            <TextBlock Text="Disconnect" />
+          </StackPanel>
+        </Button>
+
+        <Button Grid.Column="5" Classes="tool" Margin="8,0,0,0" Click="OnToggleTheme"
+                AutomationProperties.Name="Toggle light or dark theme" ToolTip.Tip="Toggle light / dark theme">
+          <StackPanel Orientation="Horizontal" Spacing="7">
+            <PathIcon Data="M12,7 A5,5 0 1 0 12.01,7 Z M11,1 H13 V4 H11 Z M11,20 H13 V23 H11 Z M1,11 H4 V13 H1 Z M20,11 H23 V13 H20 Z" />
+            <TextBlock Text="Theme" />
+          </StackPanel>
+        </Button>
+      </Grid>
+    </Border>
+
+    <!-- ═════════════ Workspace ═════════════ -->
+    <Grid Grid.Row="1" ColumnDefinitions="320,6,*">
+
+      <!-- ───── Sidebar ───── -->
+      <Border Grid.Column="0" Classes="panel" Margin="10,10,0,10">
+        <Grid RowDefinitions="Auto,*,Auto">
+
+          <StackPanel Grid.Row="0" Margin="12" Spacing="8">
+            <TextBlock Classes="section" Text="SCHEMA" />
+
+            <Border Classes="pill" HorizontalAlignment="Stretch">
+              <Grid ColumnDefinitions="Auto,*">
+                <Ellipse Classes="dot" Classes.ok="{Binding HasSchema}" VerticalAlignment="Center" />
+                <TextBlock Grid.Column="1" Classes="mono" Margin="8,0,0,0" FontSize="12"
+                           Text="{Binding SchemaSource}" TextTrimming="CharacterEllipsis"
+                           ToolTip.Tip="{Binding SchemaSource}" />
+              </Grid>
+            </Border>
+
+            <Button Classes="tool" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
+                    Command="{Binding LoadProtosCommand}"
+                    IsEnabled="{Binding !IsBusy}"
+                    ToolTip.Tip="Parse .proto files locally. No server needed.">
+              <StackPanel Orientation="Horizontal" Spacing="8">
+                <PathIcon Data="M3,6 H10 L12,8 H21 V19 H3 Z" />
+                <TextBlock Text="Load .proto files…" />
+              </StackPanel>
+            </Button>
+
+            <TextBox Classes="mono" FontSize="12" Text="{Binding ImportPaths}"
+                     Watermark="Import paths (optional, separate with ;)"
+                     AutomationProperties.Name="Import paths" />
+          </StackPanel>
+
+          <TabControl Grid.Row="1">
+            <TabItem Header="Services">
+              <Grid>
+                <TreeView ItemsSource="{Binding Services}" SelectedItem="{Binding SelectedServiceNode, Mode=TwoWay}">
+                  <TreeView.ItemTemplate>
+                    <TreeDataTemplate ItemsSource="{Binding Children}">
+                      <TextBlock Classes="mono" FontSize="12.5" Text="{Binding Title}" TextTrimming="CharacterEllipsis" />
+                    </TreeDataTemplate>
+                  </TreeView.ItemTemplate>
+                </TreeView>
+                <TextBlock IsVisible="{Binding NoSchema}" Classes="muted" TextWrapping="Wrap" Margin="16"
+                           VerticalAlignment="Top"
+                           Text="No schema loaded. Load .proto files, or enter an address and press Connect to use server reflection." />
+              </Grid>
+            </TabItem>
+
+            <TabItem Header="Collections">
+              <Grid>
+                <TreeView ItemsSource="{Binding CollectionNodes}" SelectedItem="{Binding SelectedCollectionNode, Mode=TwoWay}">
+                  <TreeView.ItemTemplate>
+                    <TreeDataTemplate ItemsSource="{Binding Children}">
+                      <TextBlock Classes="mono" FontSize="12.5" Text="{Binding Title}" TextTrimming="CharacterEllipsis" />
+                    </TreeDataTemplate>
+                  </TreeView.ItemTemplate>
+                </TreeView>
+                <TextBlock IsVisible="{Binding NoCollections}" Classes="muted" TextWrapping="Wrap" Margin="16"
+                           VerticalAlignment="Top"
+                           Text="No saved requests yet. Pick a method, edit the body, then use Save below the request editor." />
+              </Grid>
+            </TabItem>
+          </TabControl>
+
+          <Border Grid.Row="2" Classes="rule" BorderThickness="0,1,0,0" Padding="12,8">
+            <Button Classes="danger" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                    Command="{Binding DeleteSavedCommand}"
+                    IsEnabled="{Binding CanDeleteSaved}"
+                    ToolTip.Tip="Delete the selected saved request">
+              <StackPanel Orientation="Horizontal" Spacing="8">
+                <PathIcon Data="M9,3 H15 L16,5 H20 V7 H4 V5 H8 Z M6,9 H18 L17,21 H7 Z" />
+                <TextBlock Text="Delete saved request" />
+              </StackPanel>
+            </Button>
+          </Border>
+        </Grid>
+      </Border>
+
+      <GridSplitter Grid.Column="1" ResizeDirection="Columns" Margin="0,10" />
+
+      <!-- ───── Main column ───── -->
+      <Grid Grid.Column="2" Margin="0,10,10,10" RowDefinitions="Auto,*,6,*">
+
+        <!-- Method header + actions -->
+        <Border Grid.Row="0" Classes="panel" Padding="12,10" Margin="0,0,0,10">
+          <Grid ColumnDefinitions="*,Auto">
+            <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+              <Border Classes="chip" Classes.stream="{Binding IsStreamingMethod}" IsVisible="{Binding HasMethod}">
+                <TextBlock Text="{Binding MethodKind}" FontSize="12" FontWeight="SemiBold" />
+              </Border>
+              <TextBlock Classes="mono" FontSize="15" FontWeight="SemiBold" Text="{Binding MethodName}"
+                         IsVisible="{Binding HasMethod}" VerticalAlignment="Center" />
+              <TextBlock Classes="muted" Text="Select a method in Services or a saved request in Collections."
+                         IsVisible="{Binding !HasMethod}" VerticalAlignment="Center" />
+              <Border Classes="chip ok" IsVisible="{Binding IsSessionOpen}">
+                <TextBlock Text="STREAM OPEN" FontSize="12" FontWeight="SemiBold" />
+              </Border>
+            </StackPanel>
+
+            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
+              <!-- unary / server streaming -->
+              <Button Classes="danger" Command="{Binding SendCancelCommand}" IsVisible="{Binding IsOneShot}"
+                      ToolTip.Tip="Cancel the running call">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                  <PathIcon Data="M6,6 H18 V18 H6 Z" />
+                  <TextBlock Text="Cancel" />
+                </StackPanel>
+              </Button>
+              <Button Classes="primary" Command="{Binding SendCommand}" IsVisible="{Binding IsOneShot}"
+                      ToolTip.Tip="Send request (Ctrl+Enter)">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                  <PathIcon Data="M3,20 L21,12 L3,4 L3,10 L15,12 L3,14 Z" />
+                  <TextBlock Text="Send" />
+                </StackPanel>
+              </Button>
+
+              <!-- client streaming / bidi -->
+              <Button Classes="tool" Command="{Binding OpenStreamCommand}" IsVisible="{Binding IsInteractive}"
+                      ToolTip.Tip="Open the call and keep it open">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                  <PathIcon Data="M8,5 V19 L19,12 Z" />
+                  <TextBlock Text="Open stream" />
+                </StackPanel>
+              </Button>
+              <Button Classes="primary" Command="{Binding SendMessageCommand}" IsVisible="{Binding IsInteractive}"
+                      ToolTip.Tip="Send the body as one message (Ctrl+Shift+Enter)">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                  <PathIcon Data="M3,20 L21,12 L3,4 L3,10 L15,12 L3,14 Z" />
+                  <TextBlock Text="Send message" />
+                </StackPanel>
+              </Button>
+              <Button Classes="danger" Command="{Binding EndStreamCommand}" IsVisible="{Binding IsInteractive}"
+                      ToolTip.Tip="Half-close: no more requests, keep receiving">
+                <TextBlock Text="End stream" />
+              </Button>
+              <Button Classes="danger" Command="{Binding AbortStreamCommand}" IsVisible="{Binding IsInteractive}"
+                      ToolTip.Tip="Cancel the call immediately">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                  <PathIcon Data="M6,6 H18 V18 H6 Z" />
+                  <TextBlock Text="Abort" />
+                </StackPanel>
+              </Button>
+            </StackPanel>
+          </Grid>
+        </Border>
+
+        <!-- Request -->
+        <Border Grid.Row="1" Classes="panel" ClipToBounds="True">
+          <DockPanel>
+            <Border DockPanel.Dock="Top" Classes="rule" BorderThickness="0,0,0,1" Padding="12,6">
+              <Grid ColumnDefinitions="*,Auto">
+                <TextBlock Classes="section" Text="REQUEST" VerticalAlignment="Center" />
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
+                  <Button Classes="tool" Command="{Binding FormatBodyCommand}" IsEnabled="{Binding HasMethod}"
+                          ToolTip.Tip="Pretty-print the JSON body">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                      <PathIcon Data="M3,5 H21 V7 H3 Z M3,10 H15 V12 H3 Z M3,15 H21 V17 H3 Z M3,20 H12 V22 H3 Z" />
+                      <TextBlock Text="Format" />
+                    </StackPanel>
+                  </Button>
+                  <Button Classes="tool" Command="{Binding ResetBodyCommand}" IsEnabled="{Binding HasMethod}"
+                          ToolTip.Tip="Refill the body with default values">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                      <PathIcon Data="M12,5 V1 L7,6 L12,11 V7 A5,5 0 1 1 7,12 H5 A7,7 0 1 0 12,5 Z" />
+                      <TextBlock Text="Reset to defaults" />
+                    </StackPanel>
+                  </Button>
+                </StackPanel>
+              </Grid>
+            </Border>
+
+            <Border DockPanel.Dock="Bottom" Classes="rule" BorderThickness="0,1,0,0" Padding="12,8">
+              <Grid ColumnDefinitions="Auto,200,Auto,220,Auto,*">
+                <TextBlock Classes="muted" Text="Save to" VerticalAlignment="Center" Margin="0,0,8,0" />
+                <TextBox Grid.Column="1" Text="{Binding CollectionName}" Watermark="Collection"
+                         AutomationProperties.Name="Collection name" />
+                <TextBlock Grid.Column="2" Classes="muted" Text="as" VerticalAlignment="Center" Margin="10,0" />
+                <TextBox Grid.Column="3" Text="{Binding RequestName}" Watermark="Request name"
+                         AutomationProperties.Name="Request name" />
+                <Button Grid.Column="4" Classes="tool" Margin="10,0,0,0" Command="{Binding SaveRequestCommand}"
+                        IsEnabled="{Binding HasMethod}">
+                  <StackPanel Orientation="Horizontal" Spacing="8">
+                    <PathIcon Data="M5,3 H17 L21,7 V21 H3 V5 A2,2 0 0 1 5,3 Z" />
+                    <TextBlock Text="Save" />
+                  </StackPanel>
+                </Button>
+              </Grid>
+            </Border>
+
+            <TabControl>
+              <TabItem Header="Body">
+                <TextBox Classes="code" Text="{Binding Body}" AutomationProperties.Name="Request body JSON" />
+              </TabItem>
+              <TabItem Header="Metadata">
+                <TextBox Classes="code" Text="{Binding MetadataText}"
+                         Watermark="authorization: Bearer …&#x0a;x-request-id: 42"
+                         AutomationProperties.Name="Request metadata" />
+              </TabItem>
+            </TabControl>
+          </DockPanel>
+        </Border>
+
+        <GridSplitter Grid.Row="2" ResizeDirection="Rows" HorizontalAlignment="Stretch" />
+
+        <!-- Response -->
+        <Border Grid.Row="3" Classes="panel" ClipToBounds="True">
+          <DockPanel>
+            <Border DockPanel.Dock="Top" Classes="rule" BorderThickness="0,0,0,1" Padding="12,6">
+              <Grid ColumnDefinitions="Auto,*,Auto">
+                <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                  <TextBlock Classes="section" Text="RESPONSE" VerticalAlignment="Center" />
+                  <Border Classes="chip" Classes.ok="{Binding ResultIsOk}" Classes.err="{Binding ResultIsError}"
+                          IsVisible="{Binding HasResult}">
+                    <TextBlock Classes="mono" FontSize="12" FontWeight="SemiBold" Text="{Binding ResultCode}" />
+                  </Border>
+                  <TextBlock Classes="muted mono" FontSize="12" Text="{Binding ResultSummary}" VerticalAlignment="Center" />
+                </StackPanel>
+                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8">
+                  <Button Classes="tool" Click="OnCopyResponse" IsEnabled="{Binding HasResult}"
+                          ToolTip.Tip="Copy response text">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                      <PathIcon Data="M8,3 H20 V17 H8 Z M4,7 H6 V19 H16 V21 H4 Z" />
+                      <TextBlock Text="Copy" />
+                    </StackPanel>
+                  </Button>
+                  <Button Classes="tool" Command="{Binding ClearResponseCommand}" IsEnabled="{Binding HasResult}"
+                          ToolTip.Tip="Clear response">
+                    <TextBlock Text="Clear" />
+                  </Button>
+                </StackPanel>
+              </Grid>
+            </Border>
+
+            <TabControl>
+              <TabItem Header="Messages">
+                <TextBox Classes="code" IsReadOnly="True" Text="{Binding ResponseText}"
+                         AutomationProperties.Name="Response messages" />
+              </TabItem>
+              <TabItem Header="Headers">
+                <TextBox Classes="code" IsReadOnly="True" Text="{Binding HeadersText}" />
+              </TabItem>
+              <TabItem Header="Trailers">
+                <TextBox Classes="code" IsReadOnly="True" Text="{Binding TrailersText}" />
+              </TabItem>
+              <TabItem Header="Response shape">
+                <TextBox Classes="code" IsReadOnly="True" Text="{Binding ResponseShapeText}" />
+              </TabItem>
+            </TabControl>
+          </DockPanel>
+        </Border>
+      </Grid>
+    </Grid>
+
+    <!-- ═════════════ Status bar ═════════════ -->
+    <Border Grid.Row="2" Classes="rule" Background="{DynamicResource SurfaceRaised}"
+            BorderThickness="0,1,0,0" Padding="14,7">
+      <Grid ColumnDefinitions="Auto,*,Auto,Auto">
+        <Ellipse Classes="dot" Classes.ok="{Binding StatusIsOk}" Classes.err="{Binding StatusIsError}"
+                 Classes.busy="{Binding StatusIsBusy}" VerticalAlignment="Center" />
+        <TextBlock Grid.Column="1" Margin="10,0,0,0" Text="{Binding StatusLine}"
+                   TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
+        <ProgressBar Grid.Column="2" Width="140" IsIndeterminate="True" IsVisible="{Binding IsBusy}"
+                     VerticalAlignment="Center" Margin="12,0" />
+        <TextBlock Grid.Column="3" Classes="muted" FontSize="12" VerticalAlignment="Center"
+                   Text="Ctrl+Enter send  ·  Ctrl+Shift+Enter send message" />
+      </Grid>
+    </Border>
+  </Grid>
+    </Grid>
+    <Grid x:Name="ResizeHandles">
+      <Border Height="6" Margin="8,0" VerticalAlignment="Top" Background="Transparent"
+              Tag="North" Cursor="SizeNorthSouth" PointerPressed="OnResizePointerPressed" />
+      <Border Height="6" Margin="8,0" VerticalAlignment="Bottom" Background="Transparent"
+              Tag="South" Cursor="SizeNorthSouth" PointerPressed="OnResizePointerPressed" />
+      <Border Width="6" Margin="0,8" HorizontalAlignment="Left" Background="Transparent"
+              Tag="West" Cursor="SizeWestEast" PointerPressed="OnResizePointerPressed" />
+      <Border Width="6" Margin="0,8" HorizontalAlignment="Right" Background="Transparent"
+              Tag="East" Cursor="SizeWestEast" PointerPressed="OnResizePointerPressed" />
+      <Border Width="8" Height="8" HorizontalAlignment="Left" VerticalAlignment="Top"
+              Background="Transparent" Tag="NorthWest" PointerPressed="OnResizePointerPressed" />
+      <Border Width="8" Height="8" HorizontalAlignment="Right" VerticalAlignment="Top"
+              Background="Transparent" Tag="NorthEast" PointerPressed="OnResizePointerPressed" />
+      <Border Width="8" Height="8" HorizontalAlignment="Left" VerticalAlignment="Bottom"
+              Background="Transparent" Tag="SouthWest" PointerPressed="OnResizePointerPressed" />
+      <Border Width="8" Height="8" HorizontalAlignment="Right" VerticalAlignment="Bottom"
+              Background="Transparent" Tag="SouthEast" PointerPressed="OnResizePointerPressed" />
+    </Grid>
+  </Grid>
+</Window>
